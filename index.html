@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>EntropyLab — генераторы паролей, логинов и seed-фраз</title>
+
+  <!-- Подключение шрифтов для заголовков, интерфейса и технического текста -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&family=PT+Serif:wght@300;400&display=swap" rel="stylesheet">
+
+  <!-- Подключение файла стилей -->
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+  <!-- Предупреждение, показываемое один раз за сессию вкладки браузера -->
+  <div id="disclaimerOverlay" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="disclaimerTitle" aria-describedby="disclaimerBody">
+    <div class="modal-card">
+      <h2 id="disclaimerTitle" data-i18n="modal_title">Прежде чем начать</h2>
+
+      <p id="disclaimerBody" data-i18n="modal_body">EntropyLab генерирует пароли, логины и seed-фразы локально в вашем браузере, с помощью криптографически стойкого генератора случайных чисел. Мы не видим, не собираем и не храним то, что вы здесь создаёте. Но мы не несём ответственности за то, как вы храните, передаёте или используете сгенерированные данные — если аккаунт или кошелёк будут скомпрометированы из-за утечки на вашей стороне, фишинга или несоблюдения правил безопасности, это не ответственность EntropyLab. Seed-фразы для реальных криптокошельков генерируйте только офлайн, на проверенном устройстве.</p>
+
+      <button id="disclaimerBtn" class="modal-btn" type="button" data-i18n="modal_button">Понимаю, продолжить</button>
+    </div>
+  </div>
+
+
+  <main class="app">
+
+    <!-- Верхняя панель: название и переключатели -->
+    <header class="top-nav" role="banner">
+      <div class="nav-inner">
+        <div class="brand-block">
+          <span class="brand-wordmark" aria-label="EntropyLab">
+            <span class="brand-name">EntropyLab</span>
+          </span>
+        </div>
+        <nav class="nav-pills" role="tablist" aria-label="Разделы генераторов">
+          <button class="nav-pill active" data-tab="about" role="tab" aria-selected="true" aria-controls="panel-about" data-i18n="nav_about">О наборе</button>
+          <button class="nav-pill" data-tab="pw" role="tab" aria-selected="false" aria-controls="panel-pw" data-i18n="nav_pw">Пароли</button>
+          <button class="nav-pill" data-tab="login" role="tab" aria-selected="false" aria-controls="panel-login" data-i18n="nav_login">Логины</button>
+          <button class="nav-pill" data-tab="seed" role="tab" aria-selected="false" aria-controls="panel-seed" data-i18n="nav_seed">Seed-фразы</button>
+        </nav>
+
+        <div class="nav-controls">
+          <!-- Выбор языка -->
+          <div class="dropbtn-wrap" aria-label="Язык">
+            <button id="langToggle" class="drop-btn drop-btn--icon" type="button" aria-haspopup="listbox" aria-expanded="false" aria-controls="langList" data-i18n-aria="lang_aria">RU</button>
+            <ul id="langList" class="dropdown-list" role="listbox" hidden>
+              <li role="option" aria-selected="true" data-lang="ru" data-i18n="lang_ru_full">RU — Русский</li>
+              <li role="option" aria-selected="false" data-lang="en" data-i18n="lang_en_full">EN — English</li>
+            </ul>
+          </div>
+
+          <!-- Выбор цветовой темы -->
+          <div class="dropbtn-wrap" aria-label="Тема оформления">
+            <button id="themeToggle" class="drop-btn drop-btn--icon" type="button" aria-haspopup="listbox" aria-expanded="false" aria-controls="themeList" data-i18n-aria="theme_aria"></button>
+            <ul id="themeList" class="dropdown-list dropdown-list--right" role="listbox" hidden>
+              <li role="option" aria-selected="true" data-theme="dark" data-i18n="theme_dark">Тёмная</li>
+              <li role="option" aria-selected="false" data-theme="light" data-i18n="theme_light">Светлая</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <div class="content-wrap">
+
+      <!-- Главная вкладка: обзор набора -->
+      <section class="panel hero" id="panel-about" aria-labelledby="about-title">
+
+        <div class="section-eyebrow">
+          <span class="eyebrow-label" data-i18n="about_eyebrow">[ LOCAL FIRST · ZERO DEPENDENCIES ]</span>
+        </div>
+
+        <h1 id="about-title" class="display-headline">
+          <span data-i18n="about_headline_1">EntropyLab — набор из трёх генераторов, работающих полностью </span>
+          <em class="accent-word" data-i18n="about_accent">локально</em>
+          <span data-i18n="about_headline_2"> в вашем браузере.</span>
+        </h1>
+
+        <p class="lead-body" data-i18n="about_lead_body">Вся случайность берётся из Web Crypto API (<code>crypto.getRandomValues</code>), а не из <code>Math.random()</code>. Ничего не отправляется на сервер — можно даже отключить интернет и продолжить пользоваться страницей.</p>
+
+        <div class="tool-grid">
+          <article class="tool-card" data-i18n-tool="pw">
+            <span class="tool-tag" data-i18n="tool_tag_pw">[ GENERATOR ]</span>
+            <h2 class="tool-title" data-i18n="tool_title_pw">Пароли</h2>
+            <p class="tool-desc" data-i18n="tool_desc_pw">Настраиваемая длина, наборы символов, гарантия хотя бы одного символа из каждой выбранной категории, шкала энтропии.</p>
+          </article>
+
+          <article class="tool-card" data-i18n-tool="login">
+            <span class="tool-tag" data-i18n="tool_tag_login">[ GENERATOR ]</span>
+            <h2 class="tool-title" data-i18n="tool_title_login">Логины</h2>
+            <p class="tool-desc" data-i18n="tool_desc_login">Случайные имена пользователей: читаемые (слово+слово+число) или полностью случайные строки.</p>
+          </article>
+
+          <article class="tool-card" data-i18n-tool="seed">
+            <span class="tool-tag" data-i18n="tool_tag_seed">[ GENERATOR ]</span>
+            <h2 class="tool-title" data-i18n="tool_title_seed">Seed-фразы</h2>
+            <p class="tool-desc" data-i18n="tool_desc_seed">Мнемонические фразы по стандарту BIP-39 (официальный английский словарь, 12–24 слова) с корректной контрольной суммой SHA-256.</p>
+          </article>
+        </div>
+
+        <p class="note" data-i18n="about_note">Это открытый инструмент, а не аппаратный кошелёк. Для хранения реальных крипто-средств используйте офлайн-генерацию и проверенное защищённое устройство — подробности на вкладке «Seed-фразы».</p>
+
+        <div class="section-signoff">
+          <div class="neon-divider" aria-hidden="true"></div>
+          <a class="footer-credit" href="https://github.com/m0lfiln/EntropyLab" target="_blank" rel="noopener noreferrer">by m0lfiln</a>
+        </div>
+      </section>
+
+      <!-- Вкладка генератора паролей -->
+      <section class="panel generator" id="panel-pw" hidden aria-labelledby="pw-title">
+
+        <div class="section-eyebrow">
+          <span class="eyebrow-label" data-i18n="pw_eyebrow">[ PASSWORD GENERATOR ]</span>
+        </div>
+
+        <h2 id="pw-title" class="section-headline" data-i18n="pw_headline">Генератор <em class="accent-word" data-i18n="pw_accent">паролей</em></h2>
+
+        <!-- Результат и копирование -->
+        <div class="output-field">
+          <span id="pwText" class="output-text" aria-live="polite">••••••••••••</span>
+
+          <button id="pwCopyBtn" class="icon-btn" type="button" data-i18n-aria="pw_copy_aria" aria-label="Скопировать пароль">
+            <svg id="pwIconCopy" viewBox="0 0 24 24" width="20" height="20" fill="none"
+                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect x="9" y="9" width="13" height="13" rx="2"></rect>
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+            </svg>
+            <svg id="pwIconCheck" viewBox="0 0 24 24" width="20" height="20" fill="none"
+                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" hidden aria-hidden="true">
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+          </button>
+        </div>
+
+        <!-- Индикатор надёжности -->
+        <div class="strength">
+          <div class="strength-bars" id="pwBars" role="img" aria-label="Уровень энтропии">
+            <span class="strength-bar"></span>
+            <span class="strength-bar"></span>
+            <span class="strength-bar"></span>
+            <span class="strength-bar"></span>
+          </div>
+          <span id="pwLabel" class="strength-label">Weak</span>
+        </div>
+
+        <p id="pwWarning" class="warning" role="alert" hidden></p>
+
+        <!-- Длина пароля -->
+        <div class="control-row">
+          <label for="pwLength" class="control-label">
+            <span data-i18n="length_label">Длина</span>
+            <span id="pwLengthValue" class="control-value">16</span>
+          </label>
+        </div>
+        <input type="range" id="pwLength" min="8" max="64" value="16" step="1" aria-label="Длина пароля">
+
+        <!-- Категории символов -->
+        <fieldset class="options" aria-labelledby="charset-legend">
+          <legend id="charset-legend" class="sr-only">Типы символов</legend>
+
+          <label class="option">
+            <input type="checkbox" id="pwUpper" checked>
+            <span class="option-box"></span>
+            <span class="option-text"><span data-i18n="pw_opt_upper">Заглавные</span> <em>A–Z</em></span>
+          </label>
+
+          <label class="option">
+            <input type="checkbox" id="pwLower" checked>
+            <span class="option-box"></span>
+            <span class="option-text"><span data-i18n="pw_opt_lower">Строчные</span> <em>a–z</em></span>
+          </label>
+
+          <label class="option">
+            <input type="checkbox" id="pwNumbers" checked>
+            <span class="option-box"></span>
+            <span class="option-text"><span data-i18n="pw_opt_numbers">Цифры</span> <em>0–9</em></span>
+          </label>
+
+          <label class="option">
+            <input type="checkbox" id="pwSymbols" checked>
+            <span class="option-box"></span>
+            <span class="option-text"><span data-i18n="pw_opt_symbols">Символы</span> <em>!@#$%</em></span>
+          </label>
+        </fieldset>
+
+        <button id="pwGenerateBtn" class="generate-btn" type="button" data-i18n="pw_generate_btn">Сгенерировать пароль</button>
+
+        <div class="section-signoff">
+          <div class="neon-divider" aria-hidden="true"></div>
+          <a class="footer-credit" href="https://github.com/m0lfiln/EntropyLab" target="_blank" rel="noopener noreferrer">by m0lfiln</a>
+        </div>
+      </section>
+
+      <!-- Вкладка генератора логинов -->
+      <section class="panel generator" id="panel-login" hidden aria-labelledby="login-title">
+
+        <div class="section-eyebrow">
+          <span class="eyebrow-label" data-i18n="login_eyebrow">[ USERNAME GENERATOR ]</span>
+        </div>
+
+        <h2 id="login-title" class="section-headline" data-i18n="login_headline">Генератор <em class="accent-word" data-i18n="login_accent">логинов</em></h2>
+
+        <!-- Результат и копирование -->
+        <div class="output-field">
+          <span id="loginText" class="output-text" aria-live="polite">—</span>
+
+          <button id="loginCopyBtn" class="icon-btn" type="button" data-i18n-aria="login_copy_aria" aria-label="Скопировать логин">
+            <svg id="loginIconCopy" viewBox="0 0 24 24" width="20" height="20" fill="none"
+                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect x="9" y="9" width="13" height="13" rx="2"></rect>
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+            </svg>
+            <svg id="loginIconCheck" viewBox="0 0 24 24" width="20" height="20" fill="none"
+                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" hidden aria-hidden="true">
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+          </button>
+        </div>
+
+        <!-- Выбор режима генерации -->
+        <div class="chip-row" id="loginModeRow" role="radiogroup" aria-label="Режим генерации логина">
+          <button class="chip active" data-mode="readable" type="button" role="radio" aria-checked="true" data-i18n="login_mode_readable">Читаемый (слово+слово)</button>
+          <button class="chip" data-mode="random" type="button" role="radio" aria-checked="false" data-i18n="login_mode_random">Случайные символы</button>
+        </div>
+
+        <!-- Параметры: читаемый режим -->
+        <div id="loginReadableOpts">
+          <label class="option" style="grid-column:1/-1">
+            <input type="checkbox" id="loginDigits" checked>
+            <span class="option-box"></span>
+            <span class="option-text"><span data-i18n="login_digits_label">Добавить цифры</span> <em>напр. 42</em></span>
+          </label>
+        </div>
+
+        <!-- Параметры: случайный режим -->
+        <div id="loginRandomOpts" hidden>
+          <div class="control-row">
+            <label for="loginLength" class="control-label">
+              <span data-i18n="length_label">Длина</span>
+              <span id="loginLengthValue" class="control-value">10</span>
+            </label>
+          </div>
+          <input type="range" id="loginLength" min="5" max="24" value="10" step="1" aria-label="Длина логина">
+        </div>
+
+        <button id="loginGenerateBtn" class="generate-btn" type="button" data-i18n="login_generate_btn">Сгенерировать логин</button>
+
+        <div class="section-signoff">
+          <div class="neon-divider" aria-hidden="true"></div>
+          <a class="footer-credit" href="https://github.com/m0lfiln/EntropyLab" target="_blank" rel="noopener noreferrer">by m0lfiln</a>
+        </div>
+      </section>
+
+      <!-- ====================================================================
+           ГЕНЕРАТОР SEED-ФРАЗ
+           ==================================================================== -->
+      <section class="panel generator" id="panel-seed" hidden aria-labelledby="seed-title">
+
+        <div class="section-eyebrow">
+          <span class="eyebrow-label" data-i18n="seed_eyebrow">[ BIP-39 MNEMONIC GENERATOR ]</span>
+        </div>
+
+        <h2 id="seed-title" class="section-headline" data-i18n="seed_headline">Генератор <em class="accent-word" data-i18n="seed_accent">seed-фраз</em></h2>
+
+        <p class="warning warning-seed" role="alert" data-i18n="seed_warning">Никогда не вводите seed-фразу от кошелька с реальными средствами на каком-либо сайте, включая этот. Для настоящих денег генерируйте фразу офлайн на проверенном устройстве (аппаратный кошелёк). Здесь — только для обучения, тестовых кошельков и экспериментов.</p>
+
+        <!-- Количество слов -->
+        <div class="chip-row" id="seedWordCountRow" role="radiogroup" aria-label="Количество слов в seed-фразе">
+          <button class="chip" data-count="12" type="button" role="radio" aria-checked="false" data-i18n="seed_count_12">12 слов</button>
+          <button class="chip active" data-count="15" type="button" role="radio" aria-checked="true" data-i18n="seed_count_15">15 слов</button>
+          <button class="chip" data-count="18" type="button" role="radio" aria-checked="false" data-i18n="seed_count_18">18 слов</button>
+          <button class="chip" data-count="21" type="button" role="radio" aria-checked="false" data-i18n="seed_count_21">21 слово</button>
+          <button class="chip" data-count="24" type="button" role="radio" aria-checked="false" data-i18n="seed_count_24">24 слова</button>
+        </div>
+
+        <!-- Сетка слов (заполняется скриптом) -->
+        <div class="seed-grid" id="seedGrid" role="list" aria-label="Сгенерированные слова seed-фразы"></div>
+
+        <!-- Копирование одной строкой -->
+        <div class="output-field">
+          <span id="seedCopyHint" class="output-text output-hint" data-i18n="seed_hint">Нажмите «Скопировать», чтобы получить фразу одной строкой</span>
+
+          <button id="seedCopyBtn" class="icon-btn" type="button" data-i18n-aria="seed_copy_aria" aria-label="Скопировать seed-фразу">
+            <svg id="seedIconCopy" viewBox="0 0 24 24" width="20" height="20" fill="none"
+                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect x="9" y="9" width="13" height="13" rx="2"></rect>
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+            </svg>
+            <svg id="seedIconCheck" viewBox="0 0 24 24" width="20" height="20" fill="none"
+                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" hidden aria-hidden="true">
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+          </button>
+        </div>
+
+        <button id="seedGenerateBtn" class="generate-btn" type="button" data-i18n="seed_generate_btn">Сгенерировать seed-фразу</button>
+
+        <div class="section-signoff">
+          <div class="neon-divider" aria-hidden="true"></div>
+          <a class="footer-credit" href="https://github.com/m0lfiln/EntropyLab" target="_blank" rel="noopener noreferrer">by m0lfiln</a>
+        </div>
+      </section>
+
+  </main>
+
+  <!-- Toast-уведомление -->
+  <div id="toast" class="toast" role="status" aria-live="polite" aria-hidden="true"></div>
+
+  <script src="script.js"></script>
+</body>
+
+</html>
